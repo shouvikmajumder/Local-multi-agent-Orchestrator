@@ -15,46 +15,31 @@ from schemas import ReviewResult
 # describe the agent's single job and the exact format you want back. Keep each
 # prompt fixed and self-contained.
 
-# TODO: write instructions that make the model output ONLY a short, numbered plan
-#       of steps for solving a coding task — the approach, not the code itself.
-PLANNER_SYSTEM_PROMPT = """"""
+PLANNER_SYSTEM_PROMPT = """You are a software planning assistant. When given a coding task, output ONLY a concise, numbered step-by-step plan describing the approach to solve it. Do not write any code. Do not add any explanation or commentary beyond the numbered steps."""
 
-# TODO: write instructions that make the model write the actual code for a given
-#       plan. Tell it to return only the code, in a single block, nothing else.
-CODER_SYSTEM_PROMPT = """"""
+CODER_SYSTEM_PROMPT = """You are a software implementation assistant. When given a plan, write ONLY the implementation code. Output a single Python code block fenced with ```python. Do not include any explanation, prose, or commentary outside the code block."""
 
-# TODO: write instructions that make the model judge the code and reply with a
-#       verdict. It must say whether the code is correct/complete and, if not, give
-#       specific feedback. Tell it to answer as JSON with keys "approved" and
-#       "feedback" (this is what chat_json expects).
-REVIEWER_SYSTEM_PROMPT = """"""
+REVIEWER_SYSTEM_PROMPT = """You are a code review assistant. When given a Python code snippet, review it for correctness, completeness, and edge-case handling. Respond ONLY with a JSON object containing exactly two keys:
+- "approved": true if the code is correct, complete, and handles edge cases; false otherwise.
+- "feedback": a specific, actionable list of what should be fixed (use "" when approved).
+Output no prose, no explanation — only the JSON object."""
 
 
 # --- Agent functions ------------------------------------------------------------
 
 def plan(user_request: str) -> str:
-    """
-    Run the Planner on the user's request and return the plan text.
-    Implement: call the model through llm_client.chat(...) with the Planner prompt
-    and the user_request, and return what comes back.
-    """
-    pass
+    return llm_client.chat(PLANNER_SYSTEM_PROMPT, user_request)
 
 
 def write_code(plan_text: str, feedback: str = "") -> str:
-    """
-    Run the Coder and return the code it writes.
-    Implement: build one user message from the plan (and, if `feedback` is non-empty,
-    include the Reviewer's feedback so the Coder can fix the previous attempt), then
-    call llm_client.chat(...) with the Coder prompt and return the result.
-    """
-    pass
+    user_message = plan_text
+    if feedback:
+        user_message += f"\n\nPrevious attempt was rejected. Fix these issues:\n{feedback}"
+    return llm_client.chat(CODER_SYSTEM_PROMPT, user_message)
 
 
 def review(code: str) -> ReviewResult:
-    """
-    Run the Reviewer and return a ReviewResult (approved + feedback).
-    Implement: call llm_client.chat_json(...) with the Reviewer prompt, the `code`,
-    and the ReviewResult schema, and return the validated object.
-    """
-    pass
+    try:
+        return llm_client.chat_json(REVIEWER_SYSTEM_PROMPT, code, ReviewResult)
+    except Exception as e:
+        return ReviewResult(approved=False, feedback=f"Review parse error: {e}")

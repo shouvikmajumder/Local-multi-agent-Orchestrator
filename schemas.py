@@ -18,4 +18,5 @@ from pydantic import BaseModel
 # Once you add them, you'll be able to write `result.approved` and `result.feedback`
 # in the orchestrator.
 class ReviewResult(BaseModel):
-    pass  # delete this line and add the two fields described above
+    approved: bool
+    feedback: str = ""

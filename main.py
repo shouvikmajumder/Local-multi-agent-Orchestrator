@@ -4,6 +4,8 @@ main.py
 Entry point. Run this file to use the system:  python main.py
 """
 
+import sys
+
 import orchestrator
 
 
@@ -16,7 +18,14 @@ def main():
       2. Pass it to orchestrator.run(request) and store the result.
       3. Print the result so you can see the final code.
     """
-    pass
+    request = input("Enter your coding request: ")
+    try:
+        result = orchestrator.run(request)
+        print("\n--- Final Code ---\n")
+        print(result)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

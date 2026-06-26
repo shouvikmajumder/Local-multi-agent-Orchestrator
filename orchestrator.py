@@ -37,4 +37,11 @@ def run(user_request: str) -> str:
     feedback all at once. The agents never see each other — you move the data
     between them right here.
     """
-    pass  # implement the four-step flow above
+    plan_text = agents.plan(user_request)
+    code = agents.write_code(plan_text)
+    for _ in range(config.MAX_REVISION_ROUNDS):
+        result = agents.review(code)
+        if result.approved:
+            break
+        code = agents.write_code(plan_text, result.feedback)
+    return code
